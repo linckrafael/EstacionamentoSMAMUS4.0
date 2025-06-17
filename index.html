@@ -12,7 +12,7 @@
       margin: 0;
       padding: 0;
       display: flex;
-      flex-direction: column; /* Changed to column */
+      flex-direction: column;
       align-items: center;
       min-height: 100vh;
     }
@@ -61,45 +61,57 @@
       background-position: center;
       color: transparent;
     }
-    .button-container {
-      /* Remove fixed positioning */
-      position: static;
-      margin-bottom: 20px; /* Add some space below the buttons */
-      display: flex;
-      flex-direction: row; /* Keep as row for horizontal alignment */
-      gap: 8px;
-      z-index: 999;
-      justify-content: center; /* Center the buttons horizontally */
-      flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    /* Estilos para o botão de administrador no canto superior direito */
+    #admin-access-container {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
     }
-    .button-container button {
+
+    /* Estilos para o container dos botões do modo administrador (centralizados) */
+    .admin-buttons-centered {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 20px; /* Espaço abaixo dos botões e acima do mapa */
+        width: 100%;
+        max-width: 900px; /* Para alinhar com o wrapper do mapa */
+    }
+
+    /* Estilo dos botões - RESTAURADO PARA O ORIGINAL */
+    .button-style { /* Classe aplicada a todos os botões que devem ter este estilo */
       padding: 8px 12px;
       font-size: 14px;
       cursor: pointer;
       border: none;
       border-radius: 5px;
       color: white;
-      background-color: #3CB371;
+      background-color: #3CB371; /* Cor original */
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       transition: background-color 0.3s ease, transform 0.2s ease;
     }
-    .button-container button:hover {
-      background-color: #2E8B57;
+    .button-style:hover {
+      background-color: #008000; /* Cor original no hover */
       transform: translateY(-2px);
     }
-    /* New CSS to hide elements */
     .hidden {
       display: none !important;
     }
     @media (max-width: 600px) {
-      .button-container {
-        flex-direction: row;
-        flex-wrap: wrap;
-        /* Remove top/bottom/right for static positioning */
-        position: static;
-        margin-bottom: 10px; /* Adjust margin for small screens */
+      /* Ajustes para o botão de acesso admin em telas menores */
+      #admin-access-container {
+          position: static; /* Remove fixed para fluxo normal */
+          margin-top: 10px;
+          margin-bottom: 10px;
+          text-align: center;
       }
-      .button-container button {
+      .admin-buttons-centered {
+        margin-bottom: 10px;
+      }
+      .button-style { /* Aplicar também no media query */
         font-size: 12px;
         padding: 6px 8px;
       }
@@ -110,14 +122,17 @@
   <h2>Estacionamento SMAMUS</h2>
   <div id="contador">Total: 0 | Ocupadas: 0 | Livres: 0</div>
 
-  <div class="button-container">
-    <button id="admin-mode-btn">Modo Administrador</button>
-    <button id="user-mode-btn">Modo Usuário</button>
-    <button id="selecionar-todas" class="admin-button hidden">Selecionar Todas</button>
-    <button id="deselecionar-todas" class="admin-button hidden">Limpar Todas</button>
-    <button id="criar-vaga" class="admin-button hidden">Criar Vaga</button>
-    <button id="apagar-vaga" class="admin-button hidden">Apagar Vaga</button>
-    <button id="mover-vaga" class="admin-button hidden">Mover/Rotacionar</button>
+  <div id="admin-access-container">
+    <button id="admin-mode-btn" class="button-style">Modo Administrador</button>
+  </div>
+
+  <div id="admin-buttons-wrapper" class="admin-buttons-centered hidden">
+    <button id="user-mode-btn" class="button-style">Modo Usuário</button>
+    <button id="selecionar-todas" class="admin-button button-style hidden">Selecionar Todas</button>
+    <button id="deselecionar-todas" class="admin-button button-style hidden">Limpar Todas</button>
+    <button id="criar-vaga" class="admin-button button-style hidden">Criar Vaga</button>
+    <button id="apagar-vaga" class="admin-button button-style hidden">Apagar Vaga</button>
+    <button id="mover-vaga" class="admin-button button-style hidden">Mover/Rotacionar</button>
   </div>
 
   <div class="wrapper"><div id="estacionamento"></div></div>
@@ -140,7 +155,10 @@
 
     const container = document.getElementById('estacionamento');
     const contador = document.getElementById('contador');
-    const adminButtons = document.querySelectorAll('.admin-button'); // Get all admin buttons
+    const adminAccessBtn = document.getElementById('admin-mode-btn');
+    const adminButtonsWrapper = document.getElementById('admin-buttons-wrapper');
+    const allAdminButtons = adminButtonsWrapper.querySelectorAll('button');
+    const userModeBtn = document.getElementById('user-mode-btn');
 
     let isAdminMode = false;
     let isMoveMode = false;
@@ -149,13 +167,22 @@
 
     const adminPassword = "admin123";
 
-    // Function to toggle visibility of admin buttons
-    function toggleAdminButtons() {
-      adminButtons.forEach(button => {
-        if (isAdminMode) {
-          button.classList.remove('hidden');
+    function toggleAdminButtonsWrapper(show) {
+        if (show) {
+            adminButtonsWrapper.classList.remove('hidden');
         } else {
-          button.classList.add('hidden');
+            adminButtonsWrapper.classList.add('hidden');
+        }
+    }
+
+    function toggleIndividualAdminButtons(show) {
+      allAdminButtons.forEach(button => {
+        if (button.id === 'user-mode-btn') {
+            button.classList.remove('hidden'); // "Modo Usuário" sempre visível no modo admin
+        } else if (show) {
+            button.classList.remove('hidden');
+        } else {
+            button.classList.add('hidden');
         }
       });
     }
@@ -246,23 +273,27 @@
       renderVagas();
     });
 
-    document.getElementById('admin-mode-btn').addEventListener('click', () => {
+    adminAccessBtn.addEventListener('click', () => {
       const senha = prompt("Digite a senha do administrador:");
       if (senha === adminPassword) {
         isAdminMode = true;
         alert("Modo Administrador ativado.");
-        toggleAdminButtons(); // Show admin buttons
+        adminAccessBtn.classList.add('hidden'); // Esconde o botão "Modo Administrador"
+        toggleAdminButtonsWrapper(true); // Mostra o wrapper com os botões admin centralizados
+        toggleIndividualAdminButtons(true); // Garante que todos os botões admin dentro do wrapper estejam visíveis
         renderVagas();
       } else {
         alert("Senha incorreta!");
       }
     });
 
-    document.getElementById('user-mode-btn').addEventListener('click', () => {
+    userModeBtn.addEventListener('click', () => {
       isAdminMode = false;
       isMoveMode = false;
       selectedAction = null;
-      toggleAdminButtons(); // Hide admin buttons
+      adminAccessBtn.classList.remove('hidden'); // Mostra o botão "Modo Administrador" novamente
+      toggleAdminButtonsWrapper(false); // Esconde o wrapper dos botões admin
+      toggleIndividualAdminButtons(false); // Garante que todos os botões admin dentro do wrapper estejam ocultos
       renderVagas();
     });
 
@@ -296,8 +327,9 @@
       renderVagas();
     });
 
-    // Initial call to hide admin buttons when the page loads
-    toggleAdminButtons();
+    // Estado inicial: Esconder o wrapper dos botões admin e garantir que o botão de acesso admin está visível
+    toggleAdminButtonsWrapper(false); // Esconde o wrapper com os botões admin
+    adminAccessBtn.classList.remove('hidden'); // Garante que o botão "Modo Administrador" está visível
   </script>
 </body>
 </html>
