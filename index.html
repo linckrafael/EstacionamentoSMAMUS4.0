@@ -27,7 +27,8 @@
     }
     #estacionamento {
       position: relative;
-      width: 100%; padding-top: 100%;
+      width: 100%;
+      padding-top: 100%;
       background-image: url('estacionamento_800x800.png');
       background-size: cover;
       background-position: center;
@@ -53,90 +54,71 @@
       transform-origin: center center;
       transition: background-color 0.3s ease;
     }
-    .vaga.ocupada { background-color: rgba(200, 0, 0, 0.7); }
-    .vaga.admin-mode { cursor: move; box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); }
-    @media (max-width: 600px) {
-      .vaga { font-size: 2.5vw; }
+    .vaga.ocupada {
+      background-color: rgba(200, 0, 0, 0.7);
+      background-image: url('https://cdn-icons-png.flaticon.com/512/744/744465.png');
+      background-size: cover;
+      background-position: center;
+      color: transparent;
     }
-    #mode-toggle-container {
-      margin-top: 20px;
+    .button-container {
+      position: fixed;
+      top: 10px;
+      right: 10px;
       display: flex;
-      gap: 10px;
-      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 999;
     }
-    #mode-toggle-container button, #admin-actions button {
-      padding: 10px 20px;
-      font-size: 16px;
+    .button-container button {
+      padding: 8px 12px;
+      font-size: 14px;
       cursor: pointer;
       border: none;
       border-radius: 5px;
       color: white;
+      background-color: #007bff;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       transition: background-color 0.3s ease, transform 0.2s ease;
     }
-    #mode-toggle-container button { background-color: #007bff; }
-    #mode-toggle-container button:hover { background-color: #0056b3; transform: translateY(-2px); }
-    #admin-actions {
-      margin-top: 10px; display: none; gap: 10px; flex-wrap: wrap; justify-content: center;
+    .button-container button:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
     }
-    #admin-actions button { background-color: #17a2b8; }
-    #admin-actions button:hover { background-color: #117a8b; }
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5); display: flex;
-      justify-content: center; align-items: center;
-      z-index: 1000; visibility: hidden; opacity: 0;
-      transition: visibility 0s, opacity 0.3s;
+    /* New CSS to hide elements */
+    .hidden {
+      display: none !important;
     }
-    .modal-overlay.visible { visibility: visible; opacity: 1; }
-    .modal-content {
-      background: white; padding: 30px; border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center;
-      max-width: 400px; width: 90%;
+    @media (max-width: 600px) {
+      .button-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        top: auto;
+        bottom: 10px;
+        right: 10px;
+      }
+      .button-container button {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
     }
-    .modal-content input {
-      width: calc(100% - 20px); padding: 10px; margin: 15px 0 20px;
-      border: 1px solid #ddd; border-radius: 5px; font-size: 16px;
-    }
-    .modal-content button {
-      background-color: #28a745; color: white; padding: 10px 20px;
-      border: none; border-radius: 5px; cursor: pointer;
-      font-size: 16px; margin: 5px;
-    }
-    .modal-content .close-button { background-color: #6c757d; }
-    .modal-content .close-button:hover { background-color: #5a6268; }
   </style>
 </head>
 <body>
   <h2>Gerenciador de Estacionamento</h2>
   <div id="contador">Total: 0 | Ocupadas: 0 | Livres: 0</div>
   <div class="wrapper"><div id="estacionamento"></div></div>
-  <div id="mode-toggle-container">
+
+  <div class="button-container">
     <button id="admin-mode-btn">Modo Administrador</button>
     <button id="user-mode-btn">Modo Usuário</button>
+    <button id="selecionar-todas" class="admin-button hidden">Selecionar Todas</button>
+    <button id="deselecionar-todas" class="admin-button hidden">Limpar Todas</button>
+    <button id="criar-vaga" class="admin-button hidden">Criar Vaga</button>
+    <button id="apagar-vaga" class="admin-button hidden">Apagar Vaga</button>
+    <button id="mover-vaga" class="admin-button hidden">Mover/Rotacionar</button>
   </div>
-  <div id="admin-actions">
-    <button id="selecionar-todas">Selecionar Todas</button>
-    <button id="deselecionar-todas">Limpar Todas</button>
-    <button id="criar-vaga">Criar Vaga</button>
-    <button id="apagar-vaga">Apagar Vaga</button>
-  </div>
-  <div id="admin-password-modal" class="modal-overlay">
-    <div class="modal-content">
-      <h3>Senha do Administrador</h3>
-      <p>Digite a senha para acessar o modo administrador:</p>
-      <input type="password" id="admin-password-input" placeholder="Senha">
-      <button id="admin-password-submit">Entrar</button>
-      <button id="admin-password-cancel" class="close-button">Cancelar</button>
-    </div>
-  </div>
-  <div id="message-modal" class="modal-overlay">
-    <div class="modal-content">
-      <h3 id="message-modal-title"></h3>
-      <p id="message-modal-text"></p>
-      <button id="message-modal-ok">OK</button>
-    </div>
-  </div>
+
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   <script>
@@ -155,34 +137,25 @@
 
     const container = document.getElementById('estacionamento');
     const contador = document.getElementById('contador');
-    const adminModeBtn = document.getElementById('admin-mode-btn');
-    const userModeBtn = document.getElementById('user-mode-btn');
-    const adminActions = document.getElementById('admin-actions');
-    const selecionarTodasBtn = document.getElementById('selecionar-todas');
-    const deselecionarTodasBtn = document.getElementById('deselecionar-todas');
-
-    const adminPasswordModal = document.getElementById('admin-password-modal');
-    const adminPasswordInput = document.getElementById('admin-password-input');
-    const adminPasswordSubmit = document.getElementById('admin-password-submit');
-    const adminPasswordCancel = document.getElementById('admin-password-cancel');
-
-    const messageModal = document.getElementById('message-modal');
-    const messageModalTitle = document.getElementById('message-modal-title');
-    const messageModalText = document.getElementById('message-modal-text');
-    const messageModalOk = document.getElementById('message-modal-ok');
+    const adminButtons = document.querySelectorAll('.admin-button'); // Get all admin buttons
 
     let isAdminMode = false;
-    let vagas = [];
+    let isMoveMode = false;
     let selectedAction = null;
+    let vagas = [];
 
-    function showMessage(title, text) {
-      messageModalTitle.textContent = title;
-      messageModalText.textContent = text;
-      messageModal.classList.add('visible');
+    const adminPassword = "admin123";
+
+    // Function to toggle visibility of admin buttons
+    function toggleAdminButtons() {
+      adminButtons.forEach(button => {
+        if (isAdminMode) {
+          button.classList.remove('hidden');
+        } else {
+          button.classList.add('hidden');
+        }
+      });
     }
-    messageModalOk.addEventListener('click', () => {
-      messageModal.classList.remove('visible');
-    });
 
     function renderVagas() {
       container.innerHTML = '';
@@ -190,27 +163,24 @@
         const div = document.createElement('div');
         div.className = 'vaga';
         if (v.ocupada) div.classList.add('ocupada');
-        if (isAdminMode) div.classList.add('admin-mode');
         div.style.top = v.top + '%';
         div.style.left = v.left + '%';
         div.style.transform = `rotate(${v.rotate}deg)`;
-        div.textContent = v.id;
-        div.title = v.id;
+        div.textContent = v.ocupada ? '' : v.id;
 
-        if (isAdminMode) {
-          div.addEventListener('click', (e) => {
+        div.addEventListener('click', () => {
+          if (isAdminMode) {
             if (selectedAction === 'delete') {
-              if (confirm("Deseja apagar a vaga " + v.id + "?")) {
-                vagasRef.child(v.id).remove();
-                selectedAction = null;
-              }
+              vagasRef.child(v.id).remove();
+              selectedAction = null;
             } else {
-              const newStatus = !v.ocupada;
-              vagasRef.child(v.id).update({ ocupada: newStatus });
+              vagasRef.child(v.id).update({ ocupada: !v.ocupada });
             }
-          });
+          }
+        });
 
-          let isDragging = false, isRotating = false;
+        if (isAdminMode && isMoveMode) {
+          let isDragging = false;
           let startX, startY, initialTop, initialLeft, initialRotate;
 
           div.addEventListener('mousedown', (e) => {
@@ -221,34 +191,35 @@
             initialLeft = v.left;
             initialRotate = v.rotate;
             isDragging = true;
-            isRotating = e.shiftKey;
+            const isRotating = e.shiftKey;
+
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
-          });
 
-          function onMouseMove(ev) {
-            if (!isDragging) return;
-            const deltaX = ev.clientX - startX;
-            const deltaY = ev.clientY - startY;
-            const rect = container.getBoundingClientRect();
-            const percentX = (deltaX / rect.width) * 100;
-            const percentY = (deltaY / rect.height) * 100;
+            function onMouseMove(ev) {
+              if (!isDragging) return;
+              const deltaX = ev.clientX - startX;
+              const deltaY = ev.clientY - startY;
+              const rect = container.getBoundingClientRect();
+              const percentX = (deltaX / rect.width) * 100;
+              const percentY = (deltaY / rect.height) * 100;
 
-            if (isRotating) {
-              const newRotate = initialRotate + percentX * 2;
-              vagasRef.child(v.id).update({ rotate: newRotate });
-            } else {
-              const newTop = Math.min(Math.max(initialTop + percentY, 0), 100);
-              const newLeft = Math.min(Math.max(initialLeft + percentX, 0), 100);
-              vagasRef.child(v.id).update({ top: newTop, left: newLeft });
+              if (isRotating) {
+                const newRotate = initialRotate + percentX * 2;
+                vagasRef.child(v.id).update({ rotate: newRotate });
+              } else {
+                const newTop = Math.min(Math.max(initialTop + percentY, 0), 100);
+                const newLeft = Math.min(Math.max(initialLeft + percentX, 0), 100);
+                vagasRef.child(v.id).update({ top: newTop, left: newLeft });
+              }
             }
-          }
 
-          function onMouseUp() {
-            isDragging = false;
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-          }
+            function onMouseUp() {
+              isDragging = false;
+              document.removeEventListener('mousemove', onMouseMove);
+              document.removeEventListener('mouseup', onMouseUp);
+            }
+          });
         }
 
         container.appendChild(div);
@@ -266,59 +237,64 @@
       const data = snapshot.val();
       if (data) {
         vagas = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-      }
-      renderVagas();
-    });
-
-    adminModeBtn.addEventListener('click', () => {
-      adminPasswordModal.classList.add('visible');
-      adminPasswordInput.focus();
-    });
-
-    adminPasswordSubmit.addEventListener('click', () => {
-      if (adminPasswordInput.value === "admin123") {
-        isAdminMode = true;
-        renderVagas();
-        adminActions.style.display = 'flex';
-        showMessage("Sucesso", "Modo Administrador ativado!");
       } else {
-        showMessage("Erro", "Senha incorreta.");
+        vagas = [];
       }
-      adminPasswordModal.classList.remove('visible');
-      adminPasswordInput.value = '';
-    });
-
-    adminPasswordCancel.addEventListener('click', () => {
-      adminPasswordModal.classList.remove('visible');
-      adminPasswordInput.value = '';
-    });
-
-    userModeBtn.addEventListener('click', () => {
-      isAdminMode = false;
-      adminActions.style.display = 'none';
-      selectedAction = null;
       renderVagas();
-      showMessage("Sucesso", "Modo Usuário ativado!");
     });
 
-    selecionarTodasBtn.addEventListener('click', () => {
-      vagas.forEach(v => { if (!v.ocupada) vagasRef.child(v.id).update({ ocupada: true }); });
+    document.getElementById('admin-mode-btn').addEventListener('click', () => {
+      const senha = prompt("Digite a senha do administrador:");
+      if (senha === adminPassword) {
+        isAdminMode = true;
+        alert("Modo Administrador ativado.");
+        toggleAdminButtons(); // Show admin buttons
+        renderVagas();
+      } else {
+        alert("Senha incorreta!");
+      }
     });
 
-    deselecionarTodasBtn.addEventListener('click', () => {
-      vagas.forEach(v => { if (v.ocupada) vagasRef.child(v.id).update({ ocupada: false }); });
+    document.getElementById('user-mode-btn').addEventListener('click', () => {
+      isAdminMode = false;
+      isMoveMode = false;
+      selectedAction = null;
+      toggleAdminButtons(); // Hide admin buttons
+      renderVagas();
+    });
+
+    document.getElementById('selecionar-todas').addEventListener('click', () => {
+      if (!isAdminMode) return;
+      vagas.forEach(v => vagasRef.child(v.id).update({ ocupada: true }));
+    });
+
+    document.getElementById('deselecionar-todas').addEventListener('click', () => {
+      if (!isAdminMode) return;
+      vagas.forEach(v => vagasRef.child(v.id).update({ ocupada: false }));
     });
 
     document.getElementById('criar-vaga').addEventListener('click', () => {
-      const novaId = prompt("ID da nova vaga:");
+      if (!isAdminMode) return;
+      const novaId = prompt('ID da nova vaga:');
       if (!novaId) return;
       vagasRef.child(novaId).set({ top: 10, left: 10, rotate: 0, ocupada: false });
     });
 
     document.getElementById('apagar-vaga').addEventListener('click', () => {
+      if (!isAdminMode) return;
       selectedAction = 'delete';
-      showMessage("Apagar Vaga", "Clique na vaga que deseja apagar.");
+      alert('Clique na vaga que deseja apagar.');
     });
+
+    document.getElementById('mover-vaga').addEventListener('click', () => {
+      if (!isAdminMode) return;
+      isMoveMode = !isMoveMode;
+      alert(isMoveMode ? 'Modo mover/rotacionar ativado. (Segure SHIFT para rotacionar)' : 'Modo mover/rotacionar desativado.');
+      renderVagas();
+    });
+
+    // Initial call to hide admin buttons when the page loads
+    toggleAdminButtons();
   </script>
 </body>
 </html>
